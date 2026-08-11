@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 import { apiError, apiSuccess } from "@/lib/api";
 import { currentUser } from "@/lib/auth";
@@ -30,10 +30,8 @@ export async function DELETE(_: Request, { params }: RouteContext) {
     if (!project) return apiError("NOT_FOUND", "ไม่พบโปรเจกต์นี้", 404);
     return apiSuccess({ id: projectId });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return apiError("NOT_FOUND", "ไม่พบโปรเจกต์นี้", 404);
-    }
-
-    return apiError("PROJECT_DELETE_FAILED", "ไม่สามารถลบโปรเจกต์ได้", 500);
+  if (error instanceof PrismaClientKnownRequestError && error.code === "P2025") {
+    return apiError("NOT_FOUND", "ไม่พบโปรเจกต์นี้", 404);
   }
+}
 }
