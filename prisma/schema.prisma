@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Status fields remain strings so this schema is portable between SQLite and PostgreSQL.
+model User {
+  id           String    @id @default(cuid())
+  email        String?   @unique
+  name         String?
+  username     String?   @unique
+  passwordHash String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  projects     Project[] @relation("ProjectCreator")
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, expiresAt])
+}
+
+model Project {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  type        String           @default("OBJECT_DETECTION")
+  createdById String?
+  createdBy   User?            @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  nextDatasetVersion Int       @default(1)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  images      Image[]
+  classes     VisionClass[]
+  datasets    DatasetVersion[]
+  jobs        TrainingJob[]
+  models      ModelArtifact[]
+  activities  ActivityLog[]
+  mobileUploadLinks UploadAccessToken[]
+
+  @@index([updatedAt])
+}
+
+model UploadAccessToken {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([projectId, expiresAt])
+}
+
+model Image {
+  id             String         @id @default(cuid())
+  projectId      String
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  filename       String
+  originalPath   String
+  thumbnailPath  String?
+  mimeType       String
+  byteSize       Int
+  sha256         String
+  width          Int?
+  height         Int?
+  status         String         @default("UNANNOTATED")
+  uploadedAt     DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  annotations    Annotation[]
+  datasetEntries DatasetImage[]
+
+  @@unique([projectId, sha256])
+  @@index([projectId, status, uploadedAt])
+}
+
+model VisionClass {
+  id          String       @id @default(cuid())
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  color       String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  annotations Annotation[]
+
+  @@unique([projectId, name])
+}
+
+model Annotation {
+  id        String      @id @default(cuid())
+  imageId   String
+  image     Image       @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  classId   String
+  class     VisionClass @relation(fields: [classId], references: [id], onDelete: Restrict)
+  x         Float
+  y         Float
+  width     Float
+  height    Float
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([imageId])
+  @@index([classId])
+}
+
+model DatasetVersion {
+  id                 String         @id @default(cuid())
+  projectId          String
+  project            Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  version            Int
+  name               String
+  format             String         @default("YOLO")
+  status             String         @default("READY")
+  imageResizeMode    String         @default("ORIGINAL")
+  imageSize          Int?
+  trainPercent       Int
+  validationPercent  Int
+  testPercent        Int
+  storagePath        String
+  byteSize           Int            @default(0)
+  imageCount         Int            @default(0)
+  trainImageCount    Int            @default(0)
+  validationImageCount Int          @default(0)
+  testImageCount     Int            @default(0)
+  classCount         Int            @default(0)
+  annotationCount    Int            @default(0)
+  classSnapshotJson  String
+  createdAt          DateTime       @default(now())
+  images             DatasetImage[]
+  trainingJobs       TrainingJob[]
+  trainingJobEntries TrainingJobDataset[]
+
+  @@unique([projectId, version])
+  @@index([projectId, createdAt])
+}
+
+model DatasetImage {
+  id               String         @id @default(cuid())
+  datasetVersionId String
+  datasetVersion   DatasetVersion @relation(fields: [datasetVersionId], references: [id], onDelete: Cascade)
+  imageId          String
+  image            Image          @relation(fields: [imageId], references: [id], onDelete: Restrict)
+  split            String
+  labelPath        String
+
+  @@unique([datasetVersionId, imageId])
+  @@index([datasetVersionId, split])
+}
+
+model Worker {
+  id               String        @id @default(cuid())
+  workerKey        String        @unique
+  hostname         String
+  ipAddress        String?
+  status           String        @default("OFFLINE")
+  cpu              String?
+  cpuUsage         Float?
+  ramTotalMb       Int?
+  ramUsedMb        Int?
+  gpu              String?
+  gpuMemoryMb      Int?
+  gpuMemoryUsedMb  Int?
+  os               String?
+  agentVersion     String?
+  capabilitiesJson String?
+  lastError        String?
+  lastHeartbeatAt  DateTime?
+  registeredAt     DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  jobs             TrainingJob[]
+
+  @@index([status, lastHeartbeatAt])
+}
+
+model TrainingJob {
+  id                String          @id @default(cuid())
+  projectId         String
+  project           Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  datasetVersionId  String
+  datasetVersion    DatasetVersion  @relation(fields: [datasetVersionId], references: [id], onDelete: Restrict)
+  workerId          String?
+  worker            Worker?         @relation(fields: [workerId], references: [id], onDelete: SetNull)
+  baseModel         String
+  outputName        String?
+  status            String          @default("QUEUED")
+  epochs            Int
+  imageSize         Int
+  batchSize         Int
+  device            String          @default("auto")
+  currentEpoch      Int             @default(0)
+  progress          Float           @default(0)
+  metricsJson       String?
+  lastMessage       String?
+  errorMessage      String?
+  logPath           String?
+  cancelRequestedAt DateTime?
+  retryOfJobId      String?
+  datasetBundlePath String?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  model             ModelArtifact?
+  logs              TrainingJobLog[]
+  datasetEntries    TrainingJobDataset[]
+
+  @@index([projectId, status, createdAt])
+  @@index([workerId, status])
+}
+
+model TrainingJobDataset {
+  trainingJobId   String
+  trainingJob     TrainingJob    @relation(fields: [trainingJobId], references: [id], onDelete: Cascade)
+  datasetVersionId String
+  datasetVersion  DatasetVersion @relation(fields: [datasetVersionId], references: [id], onDelete: Restrict)
+  sortOrder        Int            @default(0)
+
+  @@id([trainingJobId, datasetVersionId])
+  @@index([datasetVersionId])
+  @@index([trainingJobId, sortOrder])
+}
+
+model TrainingJobLog {
+  id            String      @id @default(cuid())
+  trainingJobId String
+  trainingJob   TrainingJob @relation(fields: [trainingJobId], references: [id], onDelete: Cascade)
+  level         String      @default("INFO")
+  message       String
+  createdAt     DateTime    @default(now())
+
+  @@index([trainingJobId, createdAt])
+}
+
+model ModelArtifact {
+  id                String       @id @default(cuid())
+  projectId         String
+  project           Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  trainingJobId     String       @unique
+  trainingJob       TrainingJob  @relation(fields: [trainingJobId], references: [id], onDelete: Cascade)
+  name              String
+  baseModel         String
+  storagePath       String
+  lastCheckpointPath String?
+  resultsPath       String?
+  map50             Float?
+  map50_95          Float?
+  createdAt         DateTime     @default(now())
+
+  @@index([projectId, createdAt])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  @@index([projectId, createdAt])
+}

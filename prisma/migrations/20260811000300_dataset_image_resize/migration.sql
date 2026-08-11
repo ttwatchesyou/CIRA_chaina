@@ -1,0 +1,2 @@
+ALTER TABLE "DatasetVersion" ADD COLUMN "imageResizeMode" TEXT NOT NULL DEFAULT 'ORIGINAL';
+ALTER TABLE "DatasetVersion" ADD COLUMN "imageSize" INTEGER;

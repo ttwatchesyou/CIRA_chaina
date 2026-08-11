@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #302b46;
+  background: #f7f6fc;
+}
+
+* {
+  border-color: #e4e0ef;
+}
+
+html {
+  min-width: 320px;
+  background: #f7f6fc;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(111, 156, 214, 0.13), transparent 32rem),
+    radial-gradient(circle at 92% 8%, rgba(137, 112, 190, 0.13), transparent 34rem),
+    linear-gradient(135deg, #f8fbff 0%, #f7f4fc 52%, #f3effa 100%);
+  background-attachment: fixed;
+  font-family: Tahoma, "Noto Sans Thai", Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #6d63a9;
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #ddd7f2;
+  color: #302b46;
+}
+
+@layer components {
+  .action-primary {
+    background-image: linear-gradient(135deg, #537fb4 0%, #7664ad 100%);
+    color: white;
+    box-shadow: 0 7px 18px rgba(91, 78, 145, 0.18);
+  }
+
+  .action-primary:hover {
+    background-image: linear-gradient(135deg, #456f9f 0%, #66539d 100%);
+  }
+
+  .action-highlight {
+    border: 1px solid #ddbd5d;
+    background: #f5dda0;
+    color: #4b3915;
+    box-shadow: 0 7px 18px rgba(153, 117, 39, 0.16);
+  }
+
+  .action-highlight:hover {
+    background: #f0cf7d;
+  }
+
+  .guide-action > svg,
+  .guide-action .guide-symbol {
+    color: #3f76b5;
+    fill: rgba(63, 118, 181, 0.14);
+    stroke-width: 2.2;
+  }
+
+  .action-primary.guide-action > svg {
+    color: #d7eaff;
+    fill: rgba(215, 234, 255, 0.18);
+  }
+
+  .field-control {
+    @apply h-10 w-full rounded-lg border bg-white px-3 text-sm text-ink shadow-sm transition-colors;
+  }
+
+  .field-control:hover {
+    border-color: #c9c2df;
+  }
+}

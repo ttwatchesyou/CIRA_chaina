@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: debug server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev"
+    },
+    {
+      "name": "Vision worker: debug",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run worker"
+    }
+  ]
+}
