@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { apiError, apiSuccess } from "@/lib/api";
+import { requestAppUrl } from "@/lib/public-app-url";
 import { isWorkerRequestAuthorized } from "@/lib/worker-auth";
 import { claimTrainingJob } from "@/server/services/training.service";
 
@@ -16,7 +17,6 @@ export async function POST(request: Request) {
   const job = await claimTrainingJob(parsed.data.workerKey);
   if (!job) return apiSuccess(null);
 
-  const requestUrl = new URL(request.url);
-  const baseUrl = process.env.WORKER_PUBLIC_APP_URL?.replace(/\/$/, "") || requestUrl.origin;
+  const baseUrl = requestAppUrl(request, process.env.WORKER_PUBLIC_APP_URL);
   return apiSuccess({ job, datasetDownloadUrl: `${baseUrl}/api/workers/jobs/${job.id}/dataset` });
 }
