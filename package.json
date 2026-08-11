@@ -7,6 +7,7 @@
     "apps/*"
   ],
   "scripts": {
+    "postinstall": "prisma generate --schema prisma/schema.prisma",
     "dev": "next dev -p 3005",
     "build": "cross-env PORT=3035 next build",
     "start": "cross-env PORT=3035 next start",
@@ -17,10 +18,10 @@
     "db:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
     "db:studio": "prisma studio --schema prisma/schema.prisma",
     "worker": "yarn workspace @internal-vision/worker start",
-    "worker:setup": "node scripts/setup-worker.mjs",
-    "postinstall": "prisma generate --schema prisma/schema.prisma"
+    "worker:setup": "node scripts/setup-worker.mjs"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "prisma": "6.10.1"
   },
   "dependencies": {
