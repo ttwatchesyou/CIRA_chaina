@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 
 import { Prisma } from "@prisma/client";
-import sharp, { type Metadata } from "sharp";
+
+// `sharp` is a native module; load it lazily inside functions to avoid build-time failures on Linux builders
 
 import { getDetectedImageMimeType, MAX_IMAGE_SIZE_BYTES, safeImageFilename } from "@/lib/image-validation";
 import { originalImagePath, removeStorageFile, thumbnailImagePath, writeStorageFile } from "@/lib/storage";
@@ -155,11 +156,12 @@ async function uploadOneImage(projectId: string, userId: string, file: File): Pr
   const storedPath = originalImagePath(userId, projectId, storedFilename);
   const storedThumbnailPath = thumbnailImagePath(userId, projectId, `${randomUUID()}.jpg`);
 
-  let imageMetadata: Metadata;
+  let imageMetadata: any;
   let thumbnail: Buffer;
   try {
-    imageMetadata = await sharp(content, { failOn: "error" }).metadata();
-    thumbnail = await sharp(content, { failOn: "error" })
+    const sharpLib = (await import("sharp")).default ?? (await import("sharp"));
+    imageMetadata = await sharpLib(content, { failOn: "error" }).metadata();
+    thumbnail = await sharpLib(content, { failOn: "error" })
       .rotate()
       .resize(480, 480, { fit: "inside", withoutEnlargement: true })
       .jpeg({ quality: 82, mozjpeg: true })
