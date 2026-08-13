@@ -17,7 +17,7 @@ function serializeProject(record: ProjectSummaryRecord, annotatedImages: number)
   return {
     id: record.id,
     name: record.name,
-    description: record.description,
+    description: record.description ?? null,
     type: "OBJECT_DETECTION",
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),

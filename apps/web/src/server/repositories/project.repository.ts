@@ -1,5 +1,3 @@
-import { Prisma } from "@prisma/client";
-
 import { prisma } from "@/lib/prisma";
 
 export const projectSummarySelect = {
@@ -25,8 +23,8 @@ export type ProjectSummaryRecord = {
   name: string;
   description?: string | null;
   type: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   _count: {
     images: number;
     classes: number;
