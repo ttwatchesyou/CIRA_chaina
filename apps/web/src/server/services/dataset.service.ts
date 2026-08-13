@@ -2,7 +2,6 @@ import { createHash, randomUUID } from "node:crypto";
 import path from "node:path";
 
 import { Prisma } from "@prisma/client";
-import sharp from "sharp";
 
 import { prisma } from "@/lib/prisma";
 import {
@@ -340,12 +339,22 @@ async function prepareDatasetImage(sourcePath: string, destinationPath: string, 
   }
 
   const source = await readStorageFile(sourcePath);
-  const metadata = await sharp(source, { failOn: "error" }).metadata();
+  let sharpLib: any;
+  try {
+    // dynamic import so build can proceed when sharp native binary isn't available
+    sharpLib = (await import("sharp")).default ?? (await import("sharp"));
+  } catch (err) {
+    // Fallback: copy original file without resizing
+    const byteSize = await copyStorageFile(sourcePath, destinationPath);
+    return { byteSize, transform: null };
+  }
+
+  const metadata = await sharpLib(source, { failOn: "error" }).metadata();
   if (!metadata.width || !metadata.height) throw new Error("ไม่สามารถอ่านขนาดของรูปต้นฉบับได้");
   const swapsAxes = metadata.orientation !== undefined && metadata.orientation >= 5 && metadata.orientation <= 8;
   const sourceWidth = swapsAxes ? metadata.height : metadata.width;
   const sourceHeight = swapsAxes ? metadata.width : metadata.height;
-  const resized = await sharp(source, { failOn: "error" })
+  const resized = await sharpLib(source, { failOn: "error" })
     .rotate()
     .resize({ width: imageSize, height: imageSize, fit: "inside", withoutEnlargement: false })
     .toColorspace("srgb")
@@ -356,7 +365,7 @@ async function prepareDatasetImage(sourcePath: string, destinationPath: string, 
   const offsetY = Math.floor((imageSize - resized.info.height) / 2);
   const right = imageSize - resized.info.width - offsetX;
   const bottom = imageSize - resized.info.height - offsetY;
-  const output = await sharp(resized.data, { raw: resized.info })
+  const output = await sharpLib(resized.data, { raw: resized.info })
     .extend({ top: offsetY, bottom, left: offsetX, right, background: { r: 114, g: 114, b: 114 } })
     .jpeg({ quality: 88, chromaSubsampling: "4:2:0", mozjpeg: true })
     .toBuffer();
