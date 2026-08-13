@@ -156,7 +156,7 @@ async function uploadOneImage(projectId: string, userId: string, file: File): Pr
   const storedPath = originalImagePath(userId, projectId, storedFilename);
   const storedThumbnailPath = thumbnailImagePath(userId, projectId, `${randomUUID()}.jpg`);
 
-  let imageMetadata: any;
+  let imageMetadata: { width: number; height: number } | undefined;
   let thumbnail: Buffer;
   try {
     const sharpLib = (await import("sharp")).default ?? (await import("sharp"));
@@ -168,8 +168,10 @@ async function uploadOneImage(projectId: string, userId: string, file: File): Pr
       .toBuffer();
   } catch {
     try {
-      const Jimp = (await import("jimp")).default ?? (await import("jimp"));
-      const j = await Jimp.read(content as any);
+      const jimpMod = await import("jimp");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Jimp = (jimpMod as any).default ?? jimpMod;
+      const j = await Jimp.read(content as Buffer);
       imageMetadata = { width: j.bitmap.width, height: j.bitmap.height };
       const resized = j.contain(480, 480, Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE).quality(82);
       thumbnail = await resized.getBufferAsync(Jimp.MIME_JPEG);

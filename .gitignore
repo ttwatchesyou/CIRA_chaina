@@ -25,3 +25,4 @@ storage/models/*
 storage/training/*
 storage/worker-cache/*
 !.gitkeep
+.vercel
