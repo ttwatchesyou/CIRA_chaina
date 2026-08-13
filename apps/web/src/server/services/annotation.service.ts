@@ -114,7 +114,7 @@ export async function replaceImageAnnotations(
   }
 
   const status = boxes.length > 0 ? "ANNOTATED" : "UNANNOTATED";
-  await prisma.$transaction(async (transaction) => {
+  await prisma.$transaction(async (transaction: Prisma.TransactionClient) => {
     await transaction.annotation.deleteMany({ where: { imageId } });
     if (boxes.length > 0) {
       await transaction.annotation.createMany({
@@ -155,7 +155,7 @@ export async function createVisionClass(projectId: string, userId: string, name:
   });
   if (!project) return null;
 
-  const visionClass = await prisma.$transaction(async (transaction) => {
+  const visionClass = await prisma.$transaction(async (transaction: Prisma.TransactionClient) => {
     const created = await transaction.visionClass.create({
       data: {
         projectId,
@@ -180,7 +180,7 @@ export async function renameVisionClass(classId: string, userId: string, name: s
   });
   if (!existing) return null;
 
-  const visionClass = await prisma.$transaction(async (transaction) => {
+  const visionClass = await prisma.$transaction(async (transaction: Prisma.TransactionClient) => {
     const updated = await transaction.visionClass.update({
       where: { id: classId },
       data: { name },
@@ -222,7 +222,7 @@ export async function deleteVisionClass(
   }
 
   const affectedImageIds = visionClass.annotations.map((annotation) => annotation.imageId);
-  await prisma.$transaction(async (transaction) => {
+  await prisma.$transaction(async (transaction: Prisma.TransactionClient) => {
     await transaction.annotation.deleteMany({ where: { classId } });
     await transaction.visionClass.delete({ where: { id: classId } });
     for (const imageId of affectedImageIds) {
