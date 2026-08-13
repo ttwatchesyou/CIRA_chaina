@@ -14,7 +14,7 @@ import {
 import type { ModelFileItem, ModelFileKind, ModelItem, ModelsWorkspaceData } from "@/types/model";
 import type { TrainingMetrics } from "@/types/training";
 
-const modelInclude = Prisma.validator<Prisma.ModelArtifactInclude>()({
+const modelInclude = {
   trainingJob: {
     select: {
       id: true,
@@ -33,7 +33,7 @@ const modelInclude = Prisma.validator<Prisma.ModelArtifactInclude>()({
       },
     },
   },
-});
+} as const;
 
 type ModelRecord = Prisma.ModelArtifactGetPayload<{ include: typeof modelInclude }>;
 

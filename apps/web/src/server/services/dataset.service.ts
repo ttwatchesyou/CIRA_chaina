@@ -27,7 +27,7 @@ type BoxTransform = {
   targetSize: number;
 };
 
-const datasetSelect = Prisma.validator<Prisma.DatasetVersionSelect>()({
+const datasetSelect = {
   id: true,
   version: true,
   name: true,
@@ -47,7 +47,7 @@ const datasetSelect = Prisma.validator<Prisma.DatasetVersionSelect>()({
   annotationCount: true,
   createdAt: true,
   _count: { select: { trainingJobEntries: true } },
-});
+} as const;
 
 type DatasetRecord = Prisma.DatasetVersionGetPayload<{ select: typeof datasetSelect }>;
 

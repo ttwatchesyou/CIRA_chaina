@@ -20,7 +20,7 @@ const WORKER_OFFLINE_AFTER_MS = 30_000;
 const ACTIVE_JOB_STATUSES = ["QUEUED", "PREPARING", "DOWNLOADING_DATASET", "TRAINING", "VALIDATING", "SAVING_MODEL"];
 const TERMINAL_JOB_STATUSES = new Set<TrainingJobStatus>(["COMPLETED", "FAILED", "CANCELLED"]);
 
-const workerSelect = Prisma.validator<Prisma.WorkerSelect>()({
+const workerSelect = {
   id: true,
   workerKey: true,
   hostname: true,
@@ -37,9 +37,9 @@ const workerSelect = Prisma.validator<Prisma.WorkerSelect>()({
   agentVersion: true,
   lastError: true,
   lastHeartbeatAt: true,
-});
+} as const;
 
-const trainingJobInclude = Prisma.validator<Prisma.TrainingJobInclude>()({
+const trainingJobInclude = {
   datasetVersion: { select: { id: true, version: true, name: true, imageCount: true } },
   datasetEntries: {
     orderBy: { sortOrder: "asc" },
@@ -47,7 +47,7 @@ const trainingJobInclude = Prisma.validator<Prisma.TrainingJobInclude>()({
   },
   worker: { select: { id: true, hostname: true, status: true } },
   logs: { orderBy: { createdAt: "desc" }, take: 50 },
-});
+} as const;
 
 type WorkerRecord = Prisma.WorkerGetPayload<{ select: typeof workerSelect }>;
 type TrainingJobRecord = Prisma.TrainingJobGetPayload<{ include: typeof trainingJobInclude }>;

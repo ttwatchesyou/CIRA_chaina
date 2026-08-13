@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-export const projectSummarySelect = Prisma.validator<Prisma.ProjectSelect>()({
+export const projectSummarySelect = {
   id: true,
   name: true,
   description: true,
@@ -18,7 +18,7 @@ export const projectSummarySelect = Prisma.validator<Prisma.ProjectSelect>()({
       jobs: true,
     },
   },
-});
+} as const;
 
 export type ProjectSummaryRecord = Prisma.ProjectGetPayload<{
   select: typeof projectSummarySelect;

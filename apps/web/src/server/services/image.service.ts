@@ -9,14 +9,14 @@ import { extractImageFilesFromZip } from "@/lib/zip-extraction";
 import { prisma } from "@/lib/prisma";
 import type { ImageLibraryItem, ImageLibraryPage, UploadImagesResult, UploadItemResult } from "@/types/image";
 
-const imageSelect = Prisma.validator<Prisma.ImageSelect>()({
+const imageSelect = {
   id: true,
   filename: true,
   mimeType: true,
   byteSize: true,
   status: true,
   uploadedAt: true,
-});
+} as const;
 
 type ImageRecord = Prisma.ImageGetPayload<{ select: typeof imageSelect }>;
 
