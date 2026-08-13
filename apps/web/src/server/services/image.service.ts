@@ -167,7 +167,15 @@ async function uploadOneImage(projectId: string, userId: string, file: File): Pr
       .jpeg({ quality: 82, mozjpeg: true })
       .toBuffer();
   } catch {
-    return { filename: fallbackName, status: "FAILED", message: "ไม่สามารถประมวลผลข้อมูลรูปได้" };
+    try {
+      const Jimp = (await import("jimp")).default ?? (await import("jimp"));
+      const j = await Jimp.read(content as any);
+      imageMetadata = { width: j.bitmap.width, height: j.bitmap.height };
+      const resized = j.contain(480, 480, Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE).quality(82);
+      thumbnail = await resized.getBufferAsync(Jimp.MIME_JPEG);
+    } catch {
+      return { filename: fallbackName, status: "FAILED", message: "ไม่สามารถประมวลผลข้อมูลรูปได้" };
+    }
   }
 
   try {

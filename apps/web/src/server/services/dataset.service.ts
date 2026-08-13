@@ -5,36 +5,69 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import {
-  copyStorageFile,
-  datasetVersionPath,
-  ensureStorageDirectory,
-  readStorageFile,
-  removeStorageDirectory,
-  writeStorageFile,
-} from "@/lib/storage";
-import type { DatasetVersionItem, DatasetWorkspaceData, GenerateDatasetInput } from "@/types/dataset";
-
+  let sharpLib: any;
+  let metadata: any;
+  try {
+    // dynamic import so build can proceed when sharp native binary isn't available
+    sharpLib = (await import("sharp")).default ?? (await import("sharp"));
+    metadata = await sharpLib(source, { failOn: "error" }).metadata();
+  } catch (err) {
+    // Try Jimp fallback
+    try {
+      const Jimp = (await import("jimp")).default ?? (await import("jimp"));
+      const j = await Jimp.read(source as any);
+      metadata = { width: j.bitmap.width, height: j.bitmap.height };
+      // We'll use jimp later to produce output
+      sharpLib = null;
+    } catch (e) {
+      // Fallback: copy original file without resizing
+      const byteSize = await copyStorageFile(sourcePath, destinationPath);
+      return { byteSize, transform: null };
+    }
+  }
 type DatasetSplit = "train" | "val" | "test";
 type DatabaseSplit = "TRAIN" | "VALIDATION" | "TEST";
 type BoxTransform = {
   sourceWidth: number;
   sourceHeight: number;
-  resizedWidth: number;
-  resizedHeight: number;
-  offsetX: number;
-  offsetY: number;
-  targetSize: number;
-};
-
+  let resized: any;
+  if (sharpLib) {
+    resized = await sharpLib(source, { failOn: "error" })
+      .rotate()
+      .resize({ width: imageSize, height: imageSize, fit: "inside", withoutEnlargement: false })
+      .toColorspace("srgb")
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+  } else {
+    const Jimp = (await import("jimp")).default ?? (await import("jimp"));
+    const j = await Jimp.read(source as any);
+    const swapsAxes = metadata.orientation !== undefined && metadata.orientation >= 5 && metadata.orientation <= 8;
+    const sourceWidth = swapsAxes ? metadata.height : metadata.width;
+    const sourceHeight = swapsAxes ? metadata.width : metadata.height;
+    const resizedJ = j.contain(imageSize, imageSize, Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE).quality(88);
+    const buf = await resizedJ.getBufferAsync(Jimp.MIME_JPEG);
+    const img = await (await import("jpeg-js")).decode(buf, { useTArray: true });
+    resized = { data: Buffer.from(img.data), info: { width: img.width, height: img.height, channels: 3 } };
+  }
 const datasetSelect = {
   id: true,
   version: true,
   name: true,
   format: true,
-  status: true,
-  imageResizeMode: true,
-  imageSize: true,
-  trainPercent: true,
+  let output: Buffer;
+  if (sharpLib) {
+    output = await sharpLib(resized.data, { raw: resized.info })
+      .extend({ top: offsetY, bottom, left: offsetX, right, background: { r: 114, g: 114, b: 114 } })
+      .jpeg({ quality: 88, chromaSubsampling: "4:2:0", mozjpeg: true })
+      .toBuffer();
+  } else {
+    const Jimp = (await import("jimp")).default ?? (await import("jimp"));
+    // create Jimp image from raw buffer
+    const j = await Jimp.read(resized.data);
+    const extended = j.contain(imageSize, imageSize, Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE).quality(88);
+    output = await extended.getBufferAsync(Jimp.MIME_JPEG);
+  }
   validationPercent: true,
   testPercent: true,
   byteSize: true,
