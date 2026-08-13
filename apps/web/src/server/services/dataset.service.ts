@@ -343,7 +343,7 @@ async function prepareDatasetImage(sourcePath: string, destinationPath: string, 
   try {
     // dynamic import so build can proceed when sharp native binary isn't available
     sharpLib = (await import("sharp")).default ?? (await import("sharp"));
-  } catch (err) {
+  } catch {
     // Fallback: copy original file without resizing
     const byteSize = await copyStorageFile(sourcePath, destinationPath);
     return { byteSize, transform: null };
