@@ -8,9 +8,9 @@
   ],
   "scripts": {
     "postinstall": "prisma generate --schema prisma/schema.prisma",
-    "dev": "next dev -p 3005",
-    "build": "cross-env PORT=3035 next build",
-    "start": "cross-env PORT=3035 next start",
+    "dev": "yarn workspace @internal-vision/web dev",
+    "build": "yarn workspace @internal-vision/web build",
+    "start": "yarn workspace @internal-vision/web start",
     "lint": "yarn workspace @internal-vision/web lint",
     "typecheck": "yarn workspace @internal-vision/web typecheck && yarn workspace @internal-vision/worker typecheck",
     "db:generate": "prisma generate --schema prisma/schema.prisma",
