@@ -7,7 +7,7 @@
     "apps/*"
   ],
   "scripts": {
-    "postinstall": "prisma generate --schema prisma/schema.prisma",
+    "postinstall": "prisma generate --schema prisma/schema.prisma && node scripts/install-sharp.js",
     "dev": "yarn workspace @internal-vision/web dev",
     "build": "yarn workspace @internal-vision/web build",
     "start": "yarn workspace @internal-vision/web start",
