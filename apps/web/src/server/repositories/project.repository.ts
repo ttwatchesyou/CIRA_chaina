@@ -20,9 +20,21 @@ export const projectSummarySelect = {
   },
 } as const;
 
-export type ProjectSummaryRecord = Prisma.ProjectGetPayload<{
-  select: typeof projectSummarySelect;
-}>;
+export type ProjectSummaryRecord = {
+  id: string;
+  name: string;
+  description?: string | null;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+  _count: {
+    images: number;
+    classes: number;
+    datasets: number;
+    models: number;
+    jobs: number;
+  };
+};
 
 export async function findProjectSummaries(userId: string) {
   return prisma.project.findMany({
