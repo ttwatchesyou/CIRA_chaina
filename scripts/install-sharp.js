@@ -1,8 +1,8 @@
 const { execSync } = require('child_process');
 
-// Only run on Vercel build environment
-if (!process.env.VERCEL) {
-  console.log('Not on Vercel — skipping platform-specific sharp install.');
+// Run when the platform is Linux (Vercel build machines are Linux)
+if (process.platform !== 'linux' && !process.env.VERCEL) {
+  console.log('Not running on Linux or Vercel — skipping platform-specific sharp install.');
   process.exit(0);
 }
 
