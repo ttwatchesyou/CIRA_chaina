@@ -11,8 +11,6 @@
   },
   "dependencies": {
     "@prisma/client": "6.10.1",
-    "knex": "^2.6.0",
-    "better-sqlite3": "^8.2.0",
     "@types/qrcode": "^1.5.6",
     "@types/yauzl": "^3.4.0",
     "@types/yazl": "^3.3.1",
