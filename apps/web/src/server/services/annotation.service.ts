@@ -47,7 +47,20 @@ export async function getAnnotationWorkspace(projectId: string, userId: string):
         },
       },
     },
-  });
+  }) as {
+    id: string;
+    name: string;
+    images: Array<{
+      id: string;
+      filename: string;
+      width?: number | null;
+      height?: number | null;
+      status: string;
+      uploadedAt: Date;
+      _count: { annotations: number };
+    }>;
+    classes: Array<{ id: string; name: string; color: string; _count: { annotations: number } }>;
+  } | null;
   if (!project) return null;
 
   return {
