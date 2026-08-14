@@ -143,7 +143,9 @@ export async function replaceImageAnnotations(
   return {
     status,
     annotationCount: boxes.length,
-    classCounts: Object.fromEntries(groupedCounts.map((entry) => [entry.classId, entry._count._all])),
+    classCounts: Object.fromEntries(
+      groupedCounts.map((entry: { classId: string; _count: { _all: number } }) => [entry.classId, entry._count._all]),
+    ),
     savedAt: new Date().toISOString(),
   };
 }
